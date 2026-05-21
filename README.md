@@ -107,13 +107,10 @@ Quick information that stood out to me (The original repo's README was reference
 	
 1. Go to AWS CloudFormation  
 	1.1 Grab cloudformation/main.yml and upload as template  
-	1.2 Continue through setup, no changes should need to be made, aside from name changed (IAM Roles, Cognito User Pools, and Services all predefined in main.yml)  
-	1.3 Create Stack  
-2. Navigate to TypeScript Lambda (mine was named techStack1-crosslinkTypeScript-LDxo5sxn9HWB)  
-	1.1 Go to **Configuration -> Environment Variables -> Edit**  
-	1.2 Add Enviroment Variable `API_KEY` set to currentsapi key. By Default it is set to `CHANGE_ME`  
+	1.2 When Prompted for Name of Stack, also include your CurrentAPI API key  
+	1.4 Create Stack  
 	
-3. Create a user in Cognito for the newly created Cognito Group  
+2. Create a user in Cognito for the newly created Cognito Group  
 	1.1 Generate an email and password within required specifications (length, special characters, capitals, etc...)  
 	1.2 Create an Single Page Application App Client  
 	1.3 Once Created click Edit on the App Client  
@@ -121,8 +118,8 @@ Quick information that stood out to me (The original repo's README was reference
    		1.4.1 `ALLOW_USER_AUTH`  
 		1.4.2 `ALLOW_USER_PASSWORD_AUTH`  
 		1.4.3 `ALLOW_USER_SRP_AUTH`  
-		1.4.4 `ALLOW_ADMIN_USER_PASWORD_AUTH`  
-
+		1.4.4 `ALLOW_ADMIN_USER_PASWORD_AUTH` 
+		1.4.5 `ALLOW_REFRESH_TOKEN_AUTH`  
 ---
 
 ### 4. Testing APIs
@@ -130,7 +127,7 @@ Quick information that stood out to me (The original repo's README was reference
 #### Authorization
 
 - Ensure you have correctly configured your Cognito App Client
-- Run this command, replacing all values within '{}' to appropriate values  
+- Run this command with AWS SDK or CloudShell, replacing all values within '{}' to appropriate values  
 	`aws cognito-idp admin-initiate-auth  --user-pool-id {COGNITO_USER_POOL_ID} --client-id {APP_CLIENT_ID} --auth-flow ADMIN_NO_SRP_AUTH --auth-parameters USERNAME={USERNAME},PASSWORD={PASSWORD}`  
 	
 	- `COGNITO_USER_POOL_ID` is found in **Cognito -> <UserPool> -> Overview**
@@ -138,7 +135,7 @@ Quick information that stood out to me (The original repo's README was reference
 	- `USERNAME` and `PASSWORD` were set during Cognito Setup.
 		- I expect users and passwords to be set already but for this deployment, make sure you have created at least 1 user.
 
-- From now on, include this token as an `Authorization` header in future requests
+- From now on, include `IdToken` as an `Authorization` header in future requests
 
 
 **NEW_PASSWORD_REQUIRED response**
@@ -160,7 +157,27 @@ Quick information that stood out to me (The original repo's README was reference
  This will change the user's password AND return an access token for use.
 	
 
-#### TypeScript Function - Currents News API
+### TypeScript Function - Currents News API
+To Call the Function find your link in **API Gateway -> <APIName> -> Stages -> <Prod/Stage> -> <Path & Request> (ex. GET /ts) -> Invoke URL**  
+`https://gx7x1wm7kh.execute-api.us-east-1.amazonaws.com/Prod/ts`
 
+
+Ensure you have included your Authorization token in the request header!
+
+#### API Endpoints and parameters
+	GET `/ts` Returns all recent General News from Current API (Current responds with 30 News articles by default, I have moved to 5)
+	
+	**Headers Available for Manipulation**
+	`pageSize` : default = 5
+		- Changes returned number of news articles
+		- Handles numerical characters up to 50
+	`page` : default = 1
+		- Changes which page set to use from response. Auto-paginated from CurrentAPI
+		- Handles Numerical Characters up To CurrentAPI's max pages
+		
+		
+		
+
+	
 
 #### Python Function - User URL Shortner API
