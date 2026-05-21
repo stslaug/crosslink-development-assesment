@@ -120,6 +120,10 @@ Quick information that stood out to me (The original repo's README was reference
 		1.4.3 `ALLOW_USER_SRP_AUTH`  
 		1.4.4 `ALLOW_ADMIN_USER_PASWORD_AUTH` 
 		1.4.5 `ALLOW_REFRESH_TOKEN_AUTH`  
+
+3. Invoking Lambda functions
+	3.1 To Call the Function through an app like postman. To find your invocation link go to  **API Gateway -> <APIName> -> Stages -> <Prod/Stage> -> <Path & Request> (ex. GET /ts) -> Invoke URL  
+	3.2 Use a tool like Postman to pass headers and authentication tokens!
 ---
 
 ### 4. Testing APIs
@@ -173,11 +177,12 @@ Ensure you have included your Authorization token in the request header!
 		- Handles numerical characters up to 50
 	`page` : default = 1
 		- Changes which page set to use from response. Auto-paginated from CurrentAPI
-		- Handles Numerical Characters up To CurrentAPI's max pages
+		- Handles Numerical Characters up To CurrentAPI's max pages (180)
+	`keywords` : default = ''
+		- Only shows articles with a keyword in it (such as technology) This functions like a normal search bar
+	`domain` : default = ''
+		- Only show articles with a specified url domain such as 'reuters.com'
 		
+	These can all be used interchangeably, at the same time or any combination with or without.
 		
-		
-
-	
-
 #### Python Function - User URL Shortner API

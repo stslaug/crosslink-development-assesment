@@ -1,20 +1,14 @@
 /* 
   https://currentsapi.services/en/docs/ 
 	
-  API Key must be added to lambda settings to work!
+  API Key must be added to lambda settings to work! (Should be prompted in cloudformation stack setup)
 	
   This code is included as an inline definition in cloudformation/main.yml. No need to import code manually
-	
   I had to do inline, as alternative I saw was host on s3 bucket. Didn't want to risk going above free tier
-
-
 */
 
 
-
 exports.handler = async (event) => {
-  /* This is handle automatically by the API Gateway defined routes */
-
   /*
    Header and Required Information Checking
   */
@@ -56,7 +50,8 @@ exports.handler = async (event) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ error: 'Error page is not a number! Correct Fields and try again' })
     }
-  } else if(pageNumber > 180 || pageNumber < 0) {
+  } 
+  if(pageNumber && (pageNumber > 180 || pageNumber < 0)) {
     return {
       statusCode: 400,
       headers: { "Content-Type": "application/json" },
@@ -80,13 +75,42 @@ exports.handler = async (event) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ error: 'Error keywords exceed 100 character limit' })
     }
+  } 
+  if(keywords && (keywords.includes("?") || keywords.includes("&"))) {
+    return {
+      statusCode: 400,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: 'Error keywords includes invalid character "?" or "&"' })
+    }
+  }
+
+  /* Domain Validation */
+  const domain = event.headers["domain"] || event.headers["Domain"];
+  if(domain && domain.length > 100) {
+    return {
+      statusCode: 400,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: 'Error domain exceed 100 character limit' })
+    }
+  }
+  if(domain && (domain.includes("?") || domain.includes("&")))
+  {
+    return {
+      statusCode: 400,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: 'Error domain includes invalid character "?" or "&"' })
+    }
   }
 
 
 
   try {
-    /*Dynamically Create the API Request link based on potentially added headers. Omit if not there */
-    let apiRequestLink = ("https://api.currentsapi.services/v1/" + (keywords ? "search" : "latest-news") + "?language=en" + (keywords ? ("&keywords="+keywords) : "") + (pageSize ? ("&page_size=" + pageSize) : "&page_size=5") + (pageNumber ? ("&page_number=" + pageNumber) : "&page_number=1"));
+    /*Dynamically Create the API Request link based on potentially added headers. 
+    Omit if not there 
+    I would typically not mix api endpoints like this (switching between search and latest-news)
+    Just trying to utilize as much of this API as possible within this 1 lambda
+    */
+    let apiRequestLink = ("https://api.currentsapi.services/v1/" + (keywords ? "search" : "latest-news") + "?language=en" + (keywords ? ("&keywords="+keywords) : "") + (pageSize ? ("&page_size=" + pageSize) : "&page_size=5") + (pageNumber ? ("&page_number=" + pageNumber) : "&page_number=1") + (domain ? ("&domain="+domain) : ""));
 
     const response = await fetch(apiRequestLink, {
       headers: {
@@ -102,13 +126,13 @@ exports.handler = async (event) => {
       };
     }
     const data = await response.json();
-    return {
+    return { /* Successful Response */
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
     };
   } catch (error) {
-    return {
+    return { /* General Response */
       statusCode: 500,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ error: error.message })
