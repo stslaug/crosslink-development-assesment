@@ -37,7 +37,7 @@ Quick information that stood out to me (The original repo's README was reference
 		- UrlShortner 
 			- Chose this because it takes in user argument, a simple non authenticated post request
 
-#### *Files Structure:*
+#### **Files Structure:**
 	```
 	/aws-api-gateway-assessment
 	├── README.md
@@ -60,7 +60,7 @@ Quick information that stood out to me (The original repo's README was reference
 	- File Structure
 	- README Structure
 	
-2. ** Learning Resources**
+2. **Learning Resources**
 
 3. **Deployment Guide**
 	- Requirements
@@ -68,9 +68,10 @@ Quick information that stood out to me (The original repo's README was reference
 ---
 
 ### 2. Learning Resources
+
 	- Resources used during my learning process.
 	- Prior to this I haven't heard of / used CloudFormation
-		- Found CloudFormation Composer
+		- Found CloudFormation Composer. Using this to build main.yml
 	- My experience with Python is limited. Touched it but limited
 	
 	
@@ -79,15 +80,28 @@ Quick information that stood out to me (The original repo's README was reference
 	3. https://github.com/aws-cloudformation/aws-cloudformation-templates/
 	
 	
+	- I started by creating an API Gateway instance and Lambda instance (without CloudFormation)
+		- Got it to call Currents API. Just to remind me about linking, environment variables, manipulating data
 
-### 3. Deployment Guide**
+### 3. Deployment Guide
 
 #### Requirements
+
 	1. AWS Free Tier
+		- No IAM Roles needed, as lambda functions aren't accessing outside functions
 	
 	2. APIs
 		- https://currentsapi.services Currents API Key
 		- cleanuri.com (no api key needed with 2 requests a second max)
+	
+	3. Import CloudFormation main.yml
+		Continue through setup. No settings should be changed aside from name of service
+		Name your stack whatever you want
+
+#### Steps:
+	
+	1. Go to AWS CloudFormation
+		1.1 Grab cloudformation/main.yml and upload as template
 		
 
 
