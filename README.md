@@ -10,8 +10,12 @@ Quick information that stood out to me (The original repo's README was reference
 
 1. **Stay within AWS Free Tier Services**
 	- Cognito
+		- User Pools
+		- SPA App Client
 	- CloudFormation
 	- 2 Lamda Instances
+		- TypeScript
+		- Python
 	- API Gateway
 
 2. **Production level code**
@@ -94,35 +98,31 @@ Quick information that stood out to me (The original repo's README was reference
 
 1. AWS Free Tier
 
-	- https://currentsapi.services Currents API Key
-	- cleanuri.com (no api key needed with 2 requests a second max)
+2.  Currents API Key [https://currentsapi.services]
 
-3. Import CloudFormation main.yml
-	
-	- Continue through setup. No settings should be changed aside from name of service
-	- Name your stack whatever you want
+3. CloudFormation main.yml
 		
 
 #### Steps:
 	
-1. Go to AWS CloudFormation
-	1.1 Grab cloudformation/main.yml and upload as template
-	1.2 Continue through setup, no changes should need to be made, aside from name changed (IAM Roles, Cognito User Pools, and Services all predefined in main.yml)
-	1.3 Create Stack
-2. Navigate to TypeScript Lambda (mine was named techStack1-crosslinkTypeScript-LDxo5sxn9HWB)
-	1.1 Go to **Configuration -> Environment Variables -> Edit**
-	1.2 Add Enviroment Variable `API_KEY` set to currentsapi key. By Default it is set to `CHANGE_ME`
+1. Go to AWS CloudFormation  
+	1.1 Grab cloudformation/main.yml and upload as template  
+	1.2 Continue through setup, no changes should need to be made, aside from name changed (IAM Roles, Cognito User Pools, and Services all predefined in main.yml)  
+	1.3 Create Stack  
+2. Navigate to TypeScript Lambda (mine was named techStack1-crosslinkTypeScript-LDxo5sxn9HWB)  
+	1.1 Go to **Configuration -> Environment Variables -> Edit**  
+	1.2 Add Enviroment Variable `API_KEY` set to currentsapi key. By Default it is set to `CHANGE_ME`  
 	
-3. Create a user in Cognito for the newly created Cognito Group
-	1.1 Generate an email and password within required specifications (length, special characters, capitals, etc...)
-	1.2 Create an Single Page Application App Client
-	1.3 Once Created click Edit on the App Client
-	1.4 Grant the app client these permissions
-		1.4.1 `ALLOW_USER_AUTH`
-		1.4.2 `ALLOW_USER_PASSWORD_AUTH`
-		1.4.3 `ALLOW_USER_SRP_AUTH`
-		1.4.4 `ALLOW_ADMIN_USER_PASWORD_AUTH`
-		
+3. Create a user in Cognito for the newly created Cognito Group  
+	1.1 Generate an email and password within required specifications (length, special characters, capitals, etc...)  
+	1.2 Create an Single Page Application App Client  
+	1.3 Once Created click Edit on the App Client  
+	1.4 Grant the app client these permissions  
+   		1.4.1 `ALLOW_USER_AUTH`  
+		1.4.2 `ALLOW_USER_PASSWORD_AUTH`  
+		1.4.3 `ALLOW_USER_SRP_AUTH`  
+		1.4.4 `ALLOW_ADMIN_USER_PASWORD_AUTH`  
+
 ---
 
 ### 4. Testing APIs
@@ -130,13 +130,10 @@ Quick information that stood out to me (The original repo's README was reference
 #### Authorization
 
 - Ensure you have correctly configured your Cognito App Client
-- Run this command, which contains your cognito public link.
-- Replace all values within '{}' to appropriate values
-
+- Run this command, replacing all values within '{}' to appropriate values  
+	`aws cognito-idp admin-initiate-auth  --user-pool-id {COGNITO_USER_POOL_ID} --client-id {APP_CLIENT_ID} --auth-flow ADMIN_NO_SRP_AUTH --auth-parameters USERNAME={USERNAME},PASSWORD={PASSWORD}`  
 	
-	`aws cognito-idp admin-initiate-auth  --user-pool-id {COGNITO_USER_POOL_ID} --client-id {APP_CLIENT_ID} --auth-flow ADMIN_NO_SRP_AUTH --auth-parameters USERNAME={USERNAME},PASSWORD={PASSWORD}"`
-	
-	- `COGNITO_USER_POOL_ID` is found in **Cognito -> <User Pool> -> Overview**
+	- `COGNITO_USER_POOL_ID` is found in **Cognito -> <UserPool> -> Overview**
 	- `APP_CLIENT_ID` is found in **Cognito -> App Clients -> <ClientName>**
 	- `USERNAME` and `PASSWORD` were set during Cognito Setup.
 		- I expect users and passwords to be set already but for this deployment, make sure you have created at least 1 user.
@@ -157,8 +154,8 @@ Quick information that stood out to me (The original repo's README was reference
 		}
 	}
  ```
- You can fix this by running
- `aws cognito-idp respond-to-auth-challenge --challenge-name NEW_PASSWORD_REQUIRED --client-id {CLIENT_ID} --challenge-response USERNAME={USERNAME},NEW_PASSWORD={NEW_PASSWORD} --session {SESSION}`
+ You can fix this by running  
+ `aws cognito-idp respond-to-auth-challenge --challenge-name NEW_PASSWORD_REQUIRED --client-id {CLIENT_ID} --challenge-response USERNAME={USERNAME},NEW_PASSWORD={NEW_PASSWORD} --session {SESSION}`  
  
  This will change the user's password AND return an access token for use.
 	
