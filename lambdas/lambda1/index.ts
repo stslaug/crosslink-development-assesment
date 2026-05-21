@@ -10,45 +10,39 @@
 
 */
 
-export const handler = async (event) => {
-          const apiKey = process.env.API_KEY;
-          
-          if (!apiKey) {
-            return {
-              statusCode: 500,
-              headers: {"Content-Type": "application/json"},
-              body: JSON.stringify({ error: "API Key Missing" })
-            };
-          }
-
-          try {
-            const response = await fetch('https://api.currentsapi.services/v1/latest-news', {
-              headers: {
-                'Authorization': apiKey
-              }
-            });
-
-            if (!response.ok) {
-              return {
-                statusCode: response.status,
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({ error: `Error! Check API key or API Status!  status: ${response.status}` })
-              };
-            }
-
-            const data = await response.json();
-          
-            return {
-              statusCode: 200,
-              headers: {"Content-Type": "application/json"},
-              body: JSON.stringify(data)
-            };
-
-          } catch (error) {
-            return {
-              statusCode: 500,
-              headers: {"Content-Type": "application/json"},
-              body: JSON.stringify({ error: error.message })
-            };
-          }
-        };
+exports.handler = async (event) => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    return {
+      statusCode: 500,
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ error: "API Key Missing. Ask service administrator for help!" })
+    };
+  }
+  try {
+    const response = await fetch('https://api.currentsapi.services/v1/latest-news', {
+      headers: {
+        'Authorization': apiKey
+      }
+    });
+    if (!response.ok) {
+      return {
+        statusCode: response.status,
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ error: `Error! status: ${response.status}` })
+      };
+    }
+    const data = await response.json();
+    return {
+      statusCode: 200,
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(data)
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ error: error.message })
+    };
+  }
+};
