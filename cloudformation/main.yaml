@@ -4,6 +4,10 @@ Parameters:
     Description: CurrentsAPI Parameter (To be stored in Lambda Environment Variables)
     Type: String
     Default: 0
+  IPGeoLocatorEnv:
+    Description: https://www.ip2location.io API Key (Free)
+    Type: String
+    Default: 0
 Resources:
   crosslinkTypeScript:
     Type: AWS::Serverless::Function
@@ -15,133 +19,125 @@ Resources:
         Variables:
           API_KEY: { "Ref" : "CurrentAPIEnv" }
       InlineCode: |
-         /* 
-          https://currentsapi.services/en/docs/ 
-            
-          API Key must be added to lambda settings to work! (Should be prompted in cloudformation stack setup)
-            
-          This code is included as an inline definition in cloudformation/main.yml. No need to import code manually
-          I had to do inline, as alternative I saw was host on s3 bucket. Didn't want to risk going above free tier
-        */
-        exports.handler = async (event) => {
-          /*
-           Header and Required Information Checking
-          */
-          /* API Key Check */
-          const apiKey = process.env.API_KEY;
-          if (!apiKey) {
-            return {
-              statusCode: 500,
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ error: 'API Key Missing. Ask service administrator for help!' })
-            };
-          }
-          /* Page Size */
-          let pageSizeHeader = event.headers["pageSize"] || event.headers["pagesize"];
-          let pageSize = parseInt(pageSizeHeader, 10);
-          if (pageSizeHeader && isNaN(pageSize)) {
-            return {
-              statusCode: 400,
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ error: 'Error pageSize is not a number! Correct Fields and try again' })
-            }
-          } else if (pageSize > 50 || pageSize < 0) {
-            return {
-              statusCode: 400,
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ error: 'Error! pageSize improper value. Please set pageSize to 0 < x < 50' })
-            }
-          }
-          /* Page Number */
-          const pageNumberHeader = event.headers["page"] || event.headers["Page"];
-          let pageNumber = parseInt(pageNumberHeader, 10);
-          if (pageNumberHeader && isNaN(pageNumber)) {
-            return {
-              statusCode: 400,
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ error: 'Error page is not a number! Correct Fields and try again' })
-            }
-          } 
-          if(pageNumber && (pageNumber > 180 || pageNumber < 0)) {
-            return {
-              statusCode: 400,
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ error: 'Error! page improper value. Please set page to 0 < x < 180' })
-            }
-          }
-          if(pageSize && pageNumber && (((pageNumber - 1) * pageSize) > 5000)) {
-            return {
-              statusCode: 400,
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ error: 'Error! page * pageSize value too large. Max value total value is 5000 (CurrentsAPI Hard Limit)' })
-          }
-        }
-        /* Keywords validation */
-          const keywords = event.headers["keywords"] || event.headers["Keywords"];
-          if(keywords && keywords.length > 100) {
-            return {
-              statusCode: 400,
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ error: 'Error keywords exceed 100 character limit' })
-            }
-          } 
-          if(keywords && (keywords.includes("?") || keywords.includes("&"))) {
-            return {
-              statusCode: 400,
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ error: 'Error keywords includes invalid character "?" or "&"' })
-            }
-          }
-          /* Domain Validation */
-          const domain = event.headers["domain"] || event.headers["Domain"];
-          if(domain && domain.length > 100) {
-            return {
-              statusCode: 400,
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ error: 'Error domain exceed 100 character limit' })
-            }
-          }
-          if(domain && (domain.includes("?") || domain.includes("&")))
-          {
-            return {
-              statusCode: 400,
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ error: 'Error domain includes invalid character "?" or "&"' })
-            }
-          }
-          try {
-            /*Dynamically Create the API Request link based on potentially added headers. 
-            Omit if not there 
-            I would typically not mix api endpoints like this (switching between search and latest-news)
-            Just trying to utilize as much of this API as possible within this 1 lambda
-            */
-            let apiRequestLink = ("https://api.currentsapi.services/v1/" + (keywords ? "search" : "latest-news") + "?language=en" + (keywords ? ("&keywords="+keywords) : "") + (pageSize ? ("&page_size=" + pageSize) : "&page_size=5") + (pageNumber ? ("&page_number=" + pageNumber) : "&page_number=1") + (domain ? ("&domain="+domain) : ""));
-            const response = await fetch(apiRequestLink, {
-              headers: {
-                'Authorization': apiKey
+            exports.handler = async (event) => {
+              /*
+               Header and Required Information Checking
+              */
+              /* API Key Check */
+              const apiKey = process.env.API_KEY;
+              if (!apiKey) {
+                return {
+                  statusCode: 500,
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ error: 'API Key Missing. Ask service administrator for help!' })
+                };
               }
-            });
-            if (!response.ok) { /*Terminate if a valid response wasn't returned*/
-              return {
-                statusCode: response.status,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ error: `Error! reqLink: ${apiRequestLink} headers: pageSize: ${pageSize} page: ${pageNumber} status: ${response.status}` })
-              };
+              /* Page Size */
+              let pageSizeHeader = event.headers["pageSize"] || event.headers["pagesize"];
+              let pageSize = parseInt(pageSizeHeader, 10);
+              if (pageSizeHeader && isNaN(pageSize)) {
+                return {
+                  statusCode: 400,
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ error: 'Error pageSize is not a number! Correct Fields and try again' })
+                }
+              } else if (pageSize > 50 || pageSize < 0) {
+                return {
+                  statusCode: 400,
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ error: 'Error! pageSize improper value. Please set pageSize to 0 < x < 50' })
+                }
+              }
+              /* Page Number */
+              const pageNumberHeader = event.headers["page"] || event.headers["Page"];
+              let pageNumber = parseInt(pageNumberHeader, 10);
+              if (pageNumberHeader && isNaN(pageNumber)) {
+                return {
+                  statusCode: 400,
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ error: 'Error page is not a number! Correct Fields and try again' })
+                }
+              } 
+              if(pageNumber && (pageNumber > 180 || pageNumber < 0)) {
+                return {
+                  statusCode: 400,
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ error: 'Error! page improper value. Please set page to 0 < x < 180' })
+                }
+              }
+              if(pageSize && pageNumber && (((pageNumber - 1) * pageSize) > 5000)) {
+                return {
+                  statusCode: 400,
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ error: 'Error! page * pageSize value too large. Max value total value is 5000 (CurrentsAPI Hard Limit)' })
+              }
             }
-            const data = await response.json();
-            return { /* Successful Response */
-              statusCode: 200,
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(data)
+            /* Keywords validation */
+              const keywords = event.headers["keywords"] || event.headers["Keywords"];
+              if(keywords && keywords.length > 100) {
+                return {
+                  statusCode: 400,
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ error: 'Error keywords exceed 100 character limit' })
+                }
+              } 
+              if(keywords && (keywords.includes("?") || keywords.includes("&"))) {
+                return {
+                  statusCode: 400,
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ error: 'Error keywords includes invalid character "?" or "&"' })
+                }
+              }
+              /* Domain Validation */
+              const domain = event.headers["domain"] || event.headers["Domain"];
+              if(domain && domain.length > 100) {
+                return {
+                  statusCode: 400,
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ error: 'Error domain exceed 100 character limit' })
+                }
+              }
+              if(domain && (domain.includes("?") || domain.includes("&")))
+              {
+                return {
+                  statusCode: 400,
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ error: 'Error domain includes invalid character "?" or "&"' })
+                }
+              }
+              try {
+                /*Dynamically Create the API Request link based on potentially added headers. 
+                Omit if not there 
+                I would typically not mix api endpoints like this (switching between search and latest-news)
+                Just trying to utilize as much of this API as possible within this 1 lambda
+                */
+                let apiRequestLink = ("https://api.currentsapi.services/v1/" + (keywords ? "search" : "latest-news") + "?language=en" + (keywords ? ("&keywords="+keywords) : "") + (pageSize ? ("&page_size=" + pageSize) : "&page_size=5") + (pageNumber ? ("&page_number=" + pageNumber) : "&page_number=1") + (domain ? ("&domain="+domain) : ""));
+                const response = await fetch(apiRequestLink, {
+                  headers: {
+                    'Authorization': apiKey
+                  }
+                });
+                if (!response.ok) { /*Terminate if a valid response wasn't returned*/
+                  return {
+                    statusCode: response.status,
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ error: `Error! reqLink: ${apiRequestLink} headers: pageSize: ${pageSize} page: ${pageNumber} status: ${response.status}` })
+                  };
+                }
+                const data = await response.json();
+                return { /* Successful Response */
+                  statusCode: 200,
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(data)
+                };
+              } catch (error) {
+                return { /* General Response */
+                  statusCode: 500,
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ error: error.message })
+                };
+              }
             };
-          } catch (error) {
-            return { /* General Response */
-              statusCode: 500,
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ error: error.message })
-            };
-          }
-        };
       Handler: index.handler
       Runtime: nodejs22.x
       MemorySize: 3008
@@ -186,6 +182,11 @@ Resources:
       TracingEnabled: true
       Cors:
         MaxAge: 5
+      MethodSettings: 
+      - ResourcePath: "/*"
+        HttpMethod: "*"
+        ThrottlingRateLimit: 2
+        ThrottlingBurstLimit: 2
       Auth:
         Authorizers:
           CognitoAuth:
@@ -203,20 +204,72 @@ Resources:
   crosslinkPython:
     Type: AWS::Serverless::Function
     Properties:
+      Environment:
+        Variables:
+              API_KEY: { "Ref" : "IPGeoLocatorEnv" }
       Description: !Sub
         - Stack ${AWS::StackName} Function ${ResourceName}
         - ResourceName: crosslinkPython
       InlineCode: |
-        import requests
-        headers = {
-          'Authorization': process.env.API_KEY
-        }
-        response = requests.get(
-          'https://api.currentsapi.services/v1/latest-news',
-          headers=headers
-        )
-        data = response.json()
-        return data
+        import os
+        import json
+        import urllib.request
+        import urllib.parse
+        from urllib.error import HTTPError
+        def handler(event, context):
+            # Grab API Token
+            api_key = os.environ.get("API_KEY")
+            if api_key is None:
+                return {
+                    "statusCode": 400,
+                    "body": json.dumps({
+                        "error": "Missing API_KEY environment variable"
+                    })
+                }
+            # 1. Grab the URL to shorten from the query parameters
+            query_params = event.get("queryStringParameters") or {}
+            ip_to_find = query_params.get('ip')
+            if ip_to_find is None: #Test the URL Parameter to see if provided
+                return {
+                    "statusCode": 400,
+                    "body": json.dumps({
+                        "error": "Missing IP parameter"
+                    })
+                }
+            safe_ip = urllib.parse.quote(ip_to_find)
+            # 2. Build the request with the headers
+            fetchUrl=f'https://api.ip2location.io/?key={api_key}&ip={safe_ip}'
+            req = urllib.request.Request(fetchUrl, 
+                headers={
+                    'Content-Type': 'application/json', 
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+                    },
+                method='GET',
+            )
+            try:
+                # 3. Call the post request and read the response
+                with urllib.request.urlopen(req) as response:
+                    raw_body = response.read().decode('utf-8')
+                    data = json.loads(raw_body)  
+                # 4. Return the data
+                return {
+                    "statusCode": 200,
+                    "body": json.dumps(data)
+                }
+            except HTTPError as e:
+                raw_error_body = e.read().decode('utf-8')
+                return {
+                    "statusCode": e.code,
+                    "body": raw_error_body 
+                }
+            except Exception as e:
+                return {
+                    "statusCode": 500,
+                    "body": json.dumps({
+                        "error": str(e),
+                    })
+                }
+
       Handler: index.handler
       Runtime: python3.13
       MemorySize: 3008
@@ -228,10 +281,14 @@ Resources:
           Type: Api
           Properties:
             Path: /py
-            Method: POST
+            Method: GET
             RestApiId: !Ref crossLinkAPI
             Auth:
               Authorizer: CognitoAuth
+            RequestParameters:
+              - method.request.querystring.ip:
+                  Required: false # set not false so I can handle what happens if not there
+                  Caching: false
   crosslinkPythonLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
@@ -248,6 +305,10 @@ Resources:
             Principal:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
-      # Here is where you attach that exact policy you saw in the console
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties: 
+      UserPoolId: !Ref CrosslinkUserPool
+      Domain: !Sub "auth-${crossLinkAPI}"
