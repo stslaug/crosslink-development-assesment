@@ -1,28 +1,36 @@
-import requests
 import os
 import json
+import urllib.request
+import urllib.parse
 
-API_KEY = os.environ.get("API_KEY")
+def handler(event, context):
+    # 1. Grab the URL to shorten from the query parameters
+    query_params = event.get("queryStringParameters") or {}
+    ip_to_find = query_params.get('ip')
+    if ip_to_find is None: #Test the URL Parameter to see if provided
+        return {
+            "statusCode": 400,
+            "body": json.dumps({
+                "error": "Missing IP parameter"
+            })
+        }
 
-def lambda_handler(event, context):
-  if API_KEY == None or API_KEY == "CHANGE_ME":
+    # 2. Build the request with the headers
+    let fetchUrl="https://api.ip2location.io/?ip=" + ip_to_find +"&format=json";
+    
+    req = urllib.request.Request(fetchUrl, 
+        headers={
+            'Content-Type': 'application/json', 
+            },
+        method='GET',
+ 
+    )
+    # 3. Call the post request and read the response
+    with urllib.request.urlopen(req) as response:
+        raw_body = response.read().decode('utf-8')
+        data = json.loads(raw_body)  
+    # 4. Return the data
     return {
-        'statusCode': 400,
-        'body': json.dumps('API Key not set!')
+        "statusCode": 200,
+        "body": json.dumps(data)
     }
-  else:
-    return get_Req()
-
-def get_Req():
-  headers = {
-  'Authorization': os.environ.get("API_KEY")
-}
-  response = requests.get(
-    'https://api.currentsapi.services/v1/latest-news',
-    headers=headers
-  )
-  return {
-    'statusCode': 200,
-    'body': json.dumps(response.json())
-  }
-
