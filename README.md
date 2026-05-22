@@ -5,6 +5,15 @@
 To assess the candidate's ability to design and implement an AWS API Gateway that uses Cognito for authentication and connects to two Lambda functions. Each Lambda function will call an external service of the candidate's choice. The candidate must use CloudFormation scripts to provide the necessary infrastructure and clear documentation.
 
 
+#### **Project Overview**
+A CloudFormation yaml that is plug and play for creating a stack to interact with two APIs in two different languages. To Facilitate the API requests it invokes API Gateway, with a Cognito layer for token based Authorization. For each endpoint /ts and /py it invokes either an AWS Lambda Typescript or Python function.
+
+- API Gateway Generates with two endpoints `/ts` & `/py` protected by Cognito as an Authorizer
+- Cognito is Generated with a predefined `UserPool`, `AppClient`, and `UserDomain`
+- Two Lambda Functions were Created and Generated for use under `/ts` & `/py` endpoints
+
+
+
 #### **General Requirements Identified:**
 Quick information that stood out to me (The original repo's README was referenced during the process as well).
 
@@ -38,12 +47,11 @@ Quick information that stood out to me (The original repo's README was reference
 		- Currents
 			- Free, with simple / easy to read documentation
 			- Is complicated enough I could use Types
-		- UrlShortner 
-			- Chose this because it takes in user argument, a simple non authenticated post request
-			
-6. **Problems I Found along the way**
-	- Getting Python to work on AWS Lamdba with importing packages.
-		- Had to learn about a requirements.txt file. Then Had to figure out how to work with zip uploads. 
+	    - ~~UrlShortner~~
+		- IP2Location
+			- Free, with easy to use API
+   			- I utilize a Query parameter with it compared to headers for Currents
+      		- IP Geolocation is useful for certain things. As someone with a homelab if I get a random ping or user this will help with locating my users or external random people/bots 
 
 #### **Files Structure:**
 	```
@@ -72,20 +80,14 @@ Quick information that stood out to me (The original repo's README was reference
 
 3. **Deployment Guide**
 	- Requirements
+	- Steps
 	
 4. **Test Cases**
-	- TypeScript function for Currents
-	- Python function for ~~cleanuri.com/docs~~ had to switch since cleanuri seemed to provide links to malware
 
 ---
 
 ### 2. Learning Resources
-
-- Resources used during my learning process.
-- Prior to this I haven't heard of / used CloudFormation
-	- Found CloudFormation Composer. Using this to build main.yml
-- My experience with Python is limited. Touched it but limited
-  
+Resources used during project
 1. https://youtu.be/Omppm_YUG2g
 2. https://youtu.be/_jqwVpO1w6A
 3. https://github.com/aws-cloudformation/aws-cloudformation-templates/
@@ -95,12 +97,12 @@ Quick information that stood out to me (The original repo's README was reference
 7. https://stackoverflow.com/questions/28396036/python-3-4-urllib-request-error-http-403
 8. https://realpython.com/urllib-request/
 
-- I started by creating an API Gateway instance and Lambda instance (without CloudFormation)
-	- Got it to call Currents API. Just to remind me about linking, environment variables, manipulating data
-- Had to figure out how to setup Cognito, specifically to interject inbetween my api calls, as an authorizor for tokens.
-- Realized I needed to create a user AND an app client for it to function properly. On top of thisI had to find out how to authenticate and retrieve an access token. #4
-- I am thinking I will have to deploy from SAM CLI?
--  They key is URLlib. After solving this. things Flowed again.
+##### Problems Encountered
+- Invoking Cognito as an Authorizer
+- Using Python Libraries.
+	- More Specifically NOT using external libraries, and using URLLib from AWS
+- Cognito User Authentication
+- How to actually build a CloudFormation file. (Fixed with Composer)
 
 ---	
 	
@@ -120,19 +122,12 @@ Quick information that stood out to me (The original repo's README was reference
 	
 1. Go to AWS CloudFormation  
 	1.1 Grab cloudformation/main.yml and upload as template  
-	1.2 When Prompted for Name of Stack, also include your CurrentAPI API key in the also provided Enviornment variable input
+	1.2 When Prompted for Name of Stack
+	1.3 Include CurrentAPI API key AND ip2location API key
 	1.4 Create Stack  
 	
 2. Create a user in Cognito for the newly created Cognito Group  
-	1.1 Generate an email and password within required specifications (length, special characters, capitals, etc...)  
-	1.2 Create an Single Page Application App Client  
-	1.3 Once Created click Edit on the App Client  
-	1.4 Grant/Ensure the app client has these permissions  
-   		1.4.1 `ALLOW_USER_AUTH`  
-		1.4.2 `ALLOW_USER_PASSWORD_AUTH`  
-		1.4.3 `ALLOW_USER_SRP_AUTH`  
-		1.4.4 `ALLOW_ADMIN_USER_PASWORD_AUTH` 
-		1.4.5 `ALLOW_REFRESH_TOKEN_AUTH`  
+	2.1 Generate an username and password within required specifications (length, special characters, capitals, etc...)  
 
 3. Invoking Lambda functions
 	3.1 To Call the Function through an app like postman. To find your invocation link go to  **API Gateway -> <APIName> -> Stages -> <Prod/Stage> -> <Path & Request> (ex. GET /ts) -> Invoke URL  
@@ -241,10 +236,8 @@ Example Output
 - Special Domains 
 	
 #### Python Function - IP Geolocator
-Had to pick a new API mid-development.
-Switched form a POST cleanuri to a GET ip2location
-
 GET `/py?ip=` returns detailed information on the geolocation of the specific IP
+	- `?ip=1.1.1.1'
 
 Example Response
 ```
