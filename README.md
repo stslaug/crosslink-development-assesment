@@ -240,7 +240,7 @@ Example Output
 - Multi Word Keywords
 - Special Domains 
 	
-#### Python Function - 
+#### Python Function - IP Geolocator
 Had to pick a new API mid-development.
 Switched form a POST cleanuri to a GET ip2location
 
