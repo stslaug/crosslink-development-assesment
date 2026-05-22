@@ -1,4 +1,4 @@
-# Crosslink Junior API Developer Assesment - Sean Slaughter
+# Crosslink Junior API Developer Assessment - Sean Slaughter
 ### 1. Overview
 #### **Assessment Task: Build an AWS API Gateway with Cognito Authentication**
 #### **Objective:**
@@ -127,7 +127,7 @@ Resources used during project
 	1.4 Create Stack  
 	
 2. Create a user in Cognito for the newly created Cognito Group  
-	2.1 Generate an username and password within required specifications (length, special characters, capitals, etc...)  
+	2.1 Generate a username and password within required specifications (length, special characters, capitals, etc...)  
 
 3. Invoking Lambda functions
 	3.1 To Call the Function through an app like postman. To find your invocation link go to  **API Gateway -> <APIName> -> Stages -> <Prod/Stage> -> <Path & Request> (ex. GET /ts) -> Invoke URL  
